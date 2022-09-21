@@ -3,6 +3,12 @@ let lifeCounter = document.getElementById('lifecounter')
 let context = canvas.getContext('2d')
 let enemyArray = []
 let powerArray = []
+let lastDirectionX = 0
+let lastDirectionY = 0
+let activateProtector = false
+let protectorTimer = true
+let startTime = 0
+let endTime = 0
 
 // styling
 let windowHeight = window.innerHeight
@@ -25,27 +31,73 @@ let playerBall = {
     context.fill()
     context.closePath()
   },
+  move() {
+    this.pos.x += this.velx
+    this.pos.y += this.vely
+  },
+}
+
+let protectorCircle = {
+  pos: { x: playerBall.pos.x, y: playerBall.pos.y },
+  draw() {
+    context.beginPath()
+    context.strokeStyle = 'green'
+    context.lineWidth = 10
+    context.arc(this.pos.x, this.pos.y, 100, 0, Math.PI * 2)
+    context.stroke()
+    context.closePath()
+  },
+  move() {
+    this.pos.x += lastDirectionX
+    this.pos.y += lastDirectionY
+  },
+  bounce() {
+    if (
+      this.pos.x + 100 > canvas.width ||
+      this.pos.x - 100 < canvas.width - canvas.width
+    ) {
+      lastDirectionX = lastDirectionX * -1
+    }
+    if (
+      this.pos.y + 100 > canvas.height ||
+      this.pos.y - 100 < canvas.height - canvas.height
+    ) {
+      lastDirectionY = lastDirectionY * -1
+    }
+  },
 }
 
 // functioner för att få bollen att röra sig rakt
 window.addEventListener('keydown', function (event) {
   if (event.key == 'w') {
     playerBall.pos.y -= 6
+    if (!activateProtector) {
+      lastDirectionY = -6
+    }
   }
 })
 window.addEventListener('keydown', function (event) {
   if (event.key == 's') {
     playerBall.pos.y += 6
+    if (!activateProtector) {
+      lastDirectionY = 6
+    }
   }
 })
 window.addEventListener('keydown', function (event) {
   if (event.key == 'a') {
     playerBall.pos.x -= 7
+    if (!activateProtector) {
+      lastDirectionX = -7
+    }
   }
 })
 window.addEventListener('keydown', function (event) {
   if (event.key == 'd') {
     playerBall.pos.x += 7
+    if (!activateProtector) {
+      lastDirectionX = 7
+    }
   }
 })
 
@@ -67,6 +119,20 @@ window.addEventListener('keydown', function (event) {
 window.addEventListener('keydown', function (event) {
   if (event.key == 'd' && speedUp) {
     playerBall.pos.x += 7
+  }
+})
+
+window.addEventListener('keydown', function (event) {
+  if (event.key === ' ' && protectorTimer) {
+    activateProtector = true
+    protectorTimer = false
+    startTime = performance.now()
+    setTimeout(() => {
+      setTimeout(() => {
+        protectorTimer = true
+      }, 10000)
+      activateProtector = false
+    }, 5000)
   }
 })
 
@@ -164,19 +230,24 @@ class EnemyBall {
     let distanceX = (this.pos.x - playerBall.pos.x) ** 2
     let distanceY = (this.pos.y - playerBall.pos.y) ** 2
     let distance = Math.sqrt(distanceX + distanceY)
-    console.log(distance)
     if (distance < 40 && !godMode) {
       enemyArray.splice(index, 1)
       playerBall.health -= 1
       lifeCounter.innerHTML = playerBall.health
     }
   }
+  touchProtector(index) {
+    let distanceX = (this.pos.x - protectorCircle.pos.x) ** 2
+    let distanceY = (this.pos.y - protectorCircle.pos.y) ** 2
+    let distance = Math.sqrt(distanceX + distanceY)
+    if (distance < 110) {
+      enemyArray.splice(index, 1)
+    }
+  }
 }
 
 /*
-let ms = Date.now()
 
-let fiveSeconds = Date.now() + 5000
 
 let distanceX = (ball.position.x - this.position.x) ** 2;
             let distanceY = (ball.position.y - this.position.y) ** 2;
@@ -229,6 +300,11 @@ function runGame() {
 
   context.clearRect(0, 0, canvas.width, canvas.height)
   playerBall.draw()
+  if (activateProtector) {
+    protectorCircle.draw()
+    protectorCircle.move()
+    protectorCircle.bounce()
+  }
   if (enemyArray.length < 20) {
     let r = Math.floor(Math.random() * 256)
     let g = Math.floor(Math.random() * 256)
@@ -283,7 +359,9 @@ function runGame() {
   for (let i = 0; i < enemyArray.length; i++) {
     enemyArray[i].draw()
     enemyArray[i].move()
-
+    if (activateProtector) {
+      enemyArray[i].touchProtector(i)
+    }
     enemyArray[i].touchPlayer(i)
     enemyArray[i].touchEdge(i)
   }
