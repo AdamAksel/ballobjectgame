@@ -5,4 +5,11 @@
   flex-wrap: wrap;
   min-height: 90vh;
   min-width: 80vw;
+  margin-left: 4vw;
+  margin-right: 4vw;
 }
+
+#lifecounter{
+  margin-right: 20vw;
+}
+

@@ -1,5 +1,6 @@
 let canvas = document.getElementById('canvas')
 let lifeCounter = document.getElementById('lifecounter')
+let protectorCooldown = document.getElementById('protectorcooldown')
 let context = canvas.getContext('2d')
 let enemyArray = []
 let powerArray = []
@@ -7,8 +8,13 @@ let lastDirectionX = 0
 let lastDirectionY = 0
 let activateProtector = false
 let protectorTimer = true
-let startTime = 0
-let endTime = 0
+let speedUp = false
+let godMode = false
+let posX = 0
+let posY = 0
+let ballStartPos = 1
+let ballVelx = 0
+let ballVely = 0
 
 // styling
 let windowHeight = window.innerHeight
@@ -34,6 +40,20 @@ let playerBall = {
   move() {
     this.pos.x += this.velx
     this.pos.y += this.vely
+  },
+  shift() {
+    if (this.pos.x > canvas.width) {
+      this.pos.x -= canvas.width - 1
+    }
+    if (this.pos.x < canvas.width - canvas.width) {
+      this.pos.x += canvas.width - 1
+    }
+    if (this.pos.y > canvas.height) {
+      this.pos.y -= canvas.height - 1
+    }
+    if (this.pos.y < canvas.height - canvas.height) {
+      this.pos.y += canvas.height - 1
+    }
   },
 }
 
@@ -66,7 +86,9 @@ let protectorCircle = {
     }
   },
 }
+/*
 
+*/
 // functioner för att få bollen att röra sig rakt
 window.addEventListener('keydown', function (event) {
   if (event.key == 'w') {
@@ -126,21 +148,22 @@ window.addEventListener('keydown', function (event) {
   if (event.key === ' ' && protectorTimer) {
     activateProtector = true
     protectorTimer = false
-    startTime = performance.now()
+    protectorCooldown.innerHTML = 'Protector is on CoolDown!'
     setTimeout(() => {
       setTimeout(() => {
+        protectorCooldown.innerHTML =
+          'Protector Circle is ready, press Space to feel Safe!'
         protectorTimer = true
-      }, 10000)
+      }, 5000)
       activateProtector = false
-    }, 5000)
+    }, 10000)
   }
 })
 
 /*
 
 */
-let speedUp = false
-let godMode = false
+
 class PowerUp {
   constructor(pos, radie, color) {
     this.pos = pos
@@ -254,12 +277,6 @@ let distanceX = (ball.position.x - this.position.x) ** 2;
             let distance = Math.sqrt(distanceX + distanceY);
 */
 
-let posX = 0
-let posY = 0
-let ballStartPos = 1
-let ballVelx = 0
-let ballVely = 0
-
 function decideBallVel() {
   ballVelx = -Math.floor(Math.random() * 10) + 5
   ballVely = Math.floor(Math.random() * 10) + 5
@@ -300,6 +317,7 @@ function runGame() {
 
   context.clearRect(0, 0, canvas.width, canvas.height)
   playerBall.draw()
+  playerBall.shift()
   if (activateProtector) {
     protectorCircle.draw()
     protectorCircle.move()
@@ -372,6 +390,8 @@ function runGame() {
     return runGame()
   }, 100)
 }
+protectorCooldown.innerHTML =
+  'Protector Circle is ready, press Space to feel Safe!'
 lifeCounter.innerHTML = playerBall.health
 runGame()
 
