@@ -23,10 +23,7 @@ canvas.width = windowWidth * 0.9
 canvas.height = windowHeight * 0.9
 canvas.style.background = '#88f'
 
-// spelare som ska kunna röra sig när man trycker på tangenter
-// markörer för fiender som ska komma in från sidan av canvasen och röra sig till motsatt sida
-// collision detection
-
+// object for the player ball to move and exist
 let playerBall = {
   health: 3,
   pos: { x: canvas.width / 2, y: canvas.height / 2 },
@@ -56,9 +53,12 @@ let playerBall = {
     }
   },
 }
-
+//object for the protecting circle to exist, move and bounce
 let protectorCircle = {
-  pos: { x: playerBall.pos.x, y: playerBall.pos.y },
+  pos: {
+    x: Math.floor(Math.random() * (canvas.width * 0.7)) + 100,
+    y: Math.floor(Math.random() * (canvas.height * 0.7)) + 100,
+  },
   draw() {
     context.beginPath()
     context.strokeStyle = 'green'
@@ -73,103 +73,28 @@ let protectorCircle = {
   },
   bounce() {
     if (
-      this.pos.x + 100 > canvas.width ||
-      this.pos.x - 100 < canvas.width - canvas.width
+      this.pos.x + 110 > canvas.width ||
+      this.pos.x - 110 < canvas.width - canvas.width
     ) {
       lastDirectionX = lastDirectionX * -1
     }
     if (
-      this.pos.y + 100 > canvas.height ||
-      this.pos.y - 100 < canvas.height - canvas.height
+      this.pos.y + 110 > canvas.height ||
+      this.pos.y - 110 < canvas.height - canvas.height
     ) {
       lastDirectionY = lastDirectionY * -1
     }
   },
 }
-/*
 
-*/
-// functioner för att få bollen att röra sig rakt
-window.addEventListener('keydown', function (event) {
-  if (event.key == 'w') {
-    playerBall.pos.y -= 6
-    if (!activateProtector) {
-      lastDirectionY = -6
-    }
-  }
-})
-window.addEventListener('keydown', function (event) {
-  if (event.key == 's') {
-    playerBall.pos.y += 6
-    if (!activateProtector) {
-      lastDirectionY = 6
-    }
-  }
-})
-window.addEventListener('keydown', function (event) {
-  if (event.key == 'a') {
-    playerBall.pos.x -= 7
-    if (!activateProtector) {
-      lastDirectionX = -7
-    }
-  }
-})
-window.addEventListener('keydown', function (event) {
-  if (event.key == 'd') {
-    playerBall.pos.x += 7
-    if (!activateProtector) {
-      lastDirectionX = 7
-    }
-  }
-})
-
-window.addEventListener('keydown', function (event) {
-  if (event.key == 'w' && speedUp) {
-    playerBall.pos.y -= 6
-  }
-})
-window.addEventListener('keydown', function (event) {
-  if (event.key == 's' && speedUp) {
-    playerBall.pos.y += 6
-  }
-})
-window.addEventListener('keydown', function (event) {
-  if (event.key == 'a' && speedUp) {
-    playerBall.pos.x -= 7
-  }
-})
-window.addEventListener('keydown', function (event) {
-  if (event.key == 'd' && speedUp) {
-    playerBall.pos.x += 7
-  }
-})
-
-window.addEventListener('keydown', function (event) {
-  if (event.key === ' ' && protectorTimer) {
-    activateProtector = true
-    protectorTimer = false
-    protectorCooldown.innerHTML = 'Protector is on CoolDown!'
-    setTimeout(() => {
-      setTimeout(() => {
-        protectorCooldown.innerHTML =
-          'Protector Circle is ready, press Space to feel Safe!'
-        protectorTimer = true
-      }, 5000)
-      activateProtector = false
-    }, 10000)
-  }
-})
-
-/*
-
-*/
-
+//class constructor for creating powerups and making them interact with the player
 class PowerUp {
   constructor(pos, radie, color) {
     this.pos = pos
     this.radie = radie
     this.color = color
   }
+
   draw() {
     context.beginPath()
     context.arc(this.pos.x, this.pos.y, this.radie, 0, Math.PI * 2)
@@ -177,11 +102,7 @@ class PowerUp {
     context.fill()
     context.closePath()
   }
-  /*
-if (powerArray[i].color === ){
-  speedUp()
-}
-*/
+
   speedUp(index) {
     let distanceX = (this.pos.x - playerBall.pos.x) ** 2
     let distanceY = (this.pos.y - playerBall.pos.y) ** 2
@@ -219,7 +140,7 @@ if (powerArray[i].color === ){
     }
   }
 }
-
+//class constructor for creating enemy balls and making them interact
 class EnemyBall {
   constructor(pos, velx, vely, radie, color) {
     ;(this.pos = pos),
@@ -239,6 +160,20 @@ class EnemyBall {
     this.pos.x += this.velx
     this.pos.y += this.vely
   }
+  shift() {
+    if (this.pos.x > canvas.width) {
+      this.pos.x -= canvas.width - 1
+    }
+    if (this.pos.x < canvas.width - canvas.width) {
+      this.pos.x += canvas.width - 1
+    }
+    if (this.pos.y > canvas.height) {
+      this.pos.y -= canvas.height - 1
+    }
+    if (this.pos.y < canvas.height - canvas.height) {
+      this.pos.y += canvas.height - 1
+    }
+  }
   touchEdge(index) {
     if (
       this.pos.x > canvas.width ||
@@ -246,6 +181,7 @@ class EnemyBall {
       this.pos.y > canvas.height ||
       this.pos.y < canvas.height - canvas.height
     ) {
+      console.log('disapear')
       enemyArray.splice(index, 1)
     }
   }
@@ -269,19 +205,86 @@ class EnemyBall {
   }
 }
 
-/*
-
-
-let distanceX = (ball.position.x - this.position.x) ** 2;
-            let distanceY = (ball.position.y - this.position.y) ** 2;
-            let distance = Math.sqrt(distanceX + distanceY);
-*/
-
+// functioner för att få bollen att röra sig rakt
+window.addEventListener('keydown', function (event) {
+  if (event.key == 'w') {
+    playerBall.pos.y -= 6
+    if (!activateProtector) {
+      lastDirectionY = -6
+    }
+  }
+})
+window.addEventListener('keydown', function (event) {
+  if (event.key == 's') {
+    playerBall.pos.y += 6
+    if (!activateProtector) {
+      lastDirectionY = 6
+    }
+  }
+})
+window.addEventListener('keydown', function (event) {
+  if (event.key == 'a') {
+    playerBall.pos.x -= 7
+    if (!activateProtector) {
+      lastDirectionX = -7
+    }
+  }
+})
+window.addEventListener('keydown', function (event) {
+  if (event.key == 'd') {
+    playerBall.pos.x += 7
+    if (!activateProtector) {
+      lastDirectionX = 7
+    }
+  }
+})
+// functioner för speedUp poweruppen
+window.addEventListener('keydown', function (event) {
+  if (event.key == 'w' && speedUp) {
+    playerBall.pos.y -= 6
+  }
+})
+window.addEventListener('keydown', function (event) {
+  if (event.key == 's' && speedUp) {
+    playerBall.pos.y += 6
+  }
+})
+window.addEventListener('keydown', function (event) {
+  if (event.key == 'a' && speedUp) {
+    playerBall.pos.x -= 7
+  }
+})
+window.addEventListener('keydown', function (event) {
+  if (event.key == 'd' && speedUp) {
+    playerBall.pos.x += 7
+  }
+})
+//function för att aktivera protectorCircle
+window.addEventListener('keydown', function (event) {
+  if (event.key === ' ' && protectorTimer) {
+    activateProtector = true
+    protectorTimer = false
+    protectorCooldown.innerHTML = 'Protector is on CoolDown!'
+    setTimeout(() => {
+      setTimeout(() => {
+        protectorCooldown.innerHTML =
+          'Protector Circle is ready, press Space to feel Safe!'
+        protectorCircle.pos.x =
+          Math.floor(Math.random() * (canvas.width * 0.7)) + 100
+        protectorCircle.pos.y =
+          Math.floor(Math.random() * (canvas.height * 0.7)) + 100
+        protectorTimer = true
+      }, 5000)
+      activateProtector = false
+    }, 10000)
+  }
+})
+// function for deciding enemyBall velocity
 function decideBallVel() {
   ballVelx = -Math.floor(Math.random() * 10) + 5
   ballVely = Math.floor(Math.random() * 10) + 5
 }
-
+// function for deciding enemyball starting possition
 function decideBallPos() {
   if (ballStartPos === 1) {
     posX = Math.floor(Math.random() * canvas.width)
@@ -310,19 +313,16 @@ function decideBallPos() {
     ballStartPos = 1
   }
 }
-
-function runGame() {
-  decideBallVel()
-  decideBallPos()
-
-  context.clearRect(0, 0, canvas.width, canvas.height)
-  playerBall.draw()
-  playerBall.shift()
+// function for drawing and moving the protectorCircle
+function protector() {
   if (activateProtector) {
     protectorCircle.draw()
     protectorCircle.move()
     protectorCircle.bounce()
   }
+}
+// function for creating the enemyBalls
+function createEnemyBall() {
   if (enemyArray.length < 20) {
     let r = Math.floor(Math.random() * 256)
     let g = Math.floor(Math.random() * 256)
@@ -338,9 +338,29 @@ function runGame() {
       )
     )
   }
-
+}
+// when touchProtector was in the same for loop as touch player there was an error
+//function for handeling the enemyballs
+function handleEnemyBall() {
+  for (let i = 0; i < enemyArray.length; i++) {
+    enemyArray[i].draw()
+    enemyArray[i].move()
+  }
+  for (let i = 0; i < enemyArray.length; i++) {
+    enemyArray[i].touchPlayer(i)
+  }
+  for (let i = 0; i < enemyArray.length; i++) {
+    enemyArray[i].shift()
+  }
+  for (let i = 0; i < enemyArray.length; i++) {
+    if (activateProtector) {
+      enemyArray[i].touchProtector(i)
+    }
+  }
+}
+//Funktion för att skapa "powerUp's".
+function createPowerUp() {
   let powerColor = ''
-
   let randomizer = Math.floor(Math.random() * 150)
   if (randomizer === 1 || randomizer === 2 || randomizer === 3) {
     if (randomizer === 1) {
@@ -373,19 +393,23 @@ function runGame() {
       powerArray[i].godMode(i)
     }
   }
+}
+//Funktionen som kör spelet
+function runGame() {
+  decideBallVel()
+  decideBallPos()
+  context.clearRect(0, 0, canvas.width, canvas.height)
+  playerBall.draw()
+  playerBall.shift()
+  protector()
+  createEnemyBall()
+  handleEnemyBall()
+  createPowerUp()
 
-  for (let i = 0; i < enemyArray.length; i++) {
-    enemyArray[i].draw()
-    enemyArray[i].move()
-    if (activateProtector) {
-      enemyArray[i].touchProtector(i)
-    }
-    enemyArray[i].touchPlayer(i)
-    enemyArray[i].touchEdge(i)
-  }
   if (playerBall.health < 1) {
     return (lifeCounter.innerHTML = 'You are Dead!')
   }
+  //Sätter hastigheten som spelet kör i
   setTimeout(() => {
     return runGame()
   }, 100)
@@ -394,9 +418,3 @@ protectorCooldown.innerHTML =
   'Protector Circle is ready, press Space to feel Safe!'
 lifeCounter.innerHTML = playerBall.health
 runGame()
-
-/*
-
-touchPlayer()
-
-*/
