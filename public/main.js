@@ -15,6 +15,11 @@ let posY = 0
 let ballStartPos = 1
 let ballVelx = 0
 let ballVely = 0
+let moveKeys = [false, false, false, false]
+let speedKeys = [false, false, false, false]
+let gameStartTime = Math.floor(Date.now() / 1000)
+let playerBallSize = 30
+let size = 0
 
 // styling
 let windowHeight = window.innerHeight
@@ -29,7 +34,7 @@ let playerBall = {
   pos: { x: canvas.width / 2, y: canvas.height / 2 },
   draw() {
     context.beginPath()
-    context.arc(this.pos.x, this.pos.y, 30, 0, Math.PI * 2)
+    context.arc(this.pos.x, this.pos.y, playerBallSize, 0, Math.PI * 2)
     context.fillStyle = 'rgb(255,255,255)'
     context.fill()
     context.closePath()
@@ -107,7 +112,7 @@ class PowerUp {
     let distanceX = (this.pos.x - playerBall.pos.x) ** 2
     let distanceY = (this.pos.y - playerBall.pos.y) ** 2
     let distance = Math.sqrt(distanceX + distanceY)
-    if (distance < 70) {
+    if (distance < 40 + playerBallSize) {
       powerArray.splice(index, 1)
       speedUp = true
       setTimeout(() => {
@@ -120,7 +125,7 @@ class PowerUp {
     let distanceX = (this.pos.x - playerBall.pos.x) ** 2
     let distanceY = (this.pos.y - playerBall.pos.y) ** 2
     let distance = Math.sqrt(distanceX + distanceY)
-    if (distance < 70) {
+    if (distance < 40 + playerBallSize) {
       powerArray.splice(index, 1)
       playerBall.health += 1
       lifeCounter.innerHTML = playerBall.health
@@ -131,7 +136,7 @@ class PowerUp {
     let distanceX = (this.pos.x - playerBall.pos.x) ** 2
     let distanceY = (this.pos.y - playerBall.pos.y) ** 2
     let distance = Math.sqrt(distanceX + distanceY)
-    if (distance < 70) {
+    if (distance < 40 + playerBallSize) {
       powerArray.splice(index, 1)
       godMode = true
       setTimeout(() => {
@@ -189,7 +194,7 @@ class EnemyBall {
     let distanceX = (this.pos.x - playerBall.pos.x) ** 2
     let distanceY = (this.pos.y - playerBall.pos.y) ** 2
     let distance = Math.sqrt(distanceX + distanceY)
-    if (distance < 40 && !godMode) {
+    if (distance < 10 + playerBallSize && !godMode) {
       enemyArray.splice(index, 1)
       playerBall.health -= 1
       lifeCounter.innerHTML = playerBall.health
@@ -204,59 +209,112 @@ class EnemyBall {
     }
   }
 }
+/*
+var deltaX = 0; var deltaY = 0;  
+ window.addEventListener("keydown", keysPressed, false); 
+ window.addEventListener("keyup", keysReleased, false);   
+ var keys = [];   
+ function keysPressed(e) {     // store an entry for every key pressed     keys[e.keyCode] = true;
+         // left     if (keys[37]) {       deltaX -= 2;     }       
+         // right     if (keys[39]) {       deltaX += 2;     }       
+         // down     if (keys[38]) {       deltaY -= 2;     }       
+         // up     if (keys[40]) {       deltaY += 2;     }      
+          e.preventDefault(); }  
+           function keysReleased(e) {     // mark keys that were released     keys[e.keyCode] = false; }
+*/
 
 // functioner för att få bollen att röra sig rakt
 window.addEventListener('keydown', function (event) {
   if (event.key == 'w') {
-    playerBall.pos.y -= 6
+    moveKeys[1] = true
     if (!activateProtector) {
-      lastDirectionY = -6
+      lastDirectionY = -4
     }
   }
 })
 window.addEventListener('keydown', function (event) {
   if (event.key == 's') {
-    playerBall.pos.y += 6
+    moveKeys[2] = true
     if (!activateProtector) {
-      lastDirectionY = 6
+      lastDirectionY = 4
     }
   }
 })
 window.addEventListener('keydown', function (event) {
   if (event.key == 'a') {
-    playerBall.pos.x -= 7
+    moveKeys[3] = true
     if (!activateProtector) {
-      lastDirectionX = -7
+      lastDirectionX = -4
     }
   }
 })
 window.addEventListener('keydown', function (event) {
   if (event.key == 'd') {
-    playerBall.pos.x += 7
+    moveKeys[4] = true
     if (!activateProtector) {
-      lastDirectionX = 7
+      lastDirectionX = 4
     }
+  }
+})
+window.addEventListener('keyup', function (event) {
+  if (event.key == 'w') {
+    moveKeys[1] = false
+  }
+})
+window.addEventListener('keyup', function (event) {
+  if (event.key == 's') {
+    moveKeys[2] = false
+  }
+})
+window.addEventListener('keyup', function (event) {
+  if (event.key == 'a') {
+    moveKeys[3] = false
+  }
+})
+window.addEventListener('keyup', function (event) {
+  if (event.key == 'd') {
+    moveKeys[4] = false
   }
 })
 // functioner för speedUp poweruppen
 window.addEventListener('keydown', function (event) {
   if (event.key == 'w' && speedUp) {
-    playerBall.pos.y -= 6
+    speedKeys[1] = true
   }
 })
 window.addEventListener('keydown', function (event) {
   if (event.key == 's' && speedUp) {
-    playerBall.pos.y += 6
+    speedKeys[2] = true
   }
 })
 window.addEventListener('keydown', function (event) {
   if (event.key == 'a' && speedUp) {
-    playerBall.pos.x -= 7
+    speedKeys[3] = true
   }
 })
 window.addEventListener('keydown', function (event) {
   if (event.key == 'd' && speedUp) {
-    playerBall.pos.x += 7
+    speedKeys[4] = true
+  }
+})
+window.addEventListener('keyup', function (event) {
+  if (event.key == 'w') {
+    speedKeys[1] = false
+  }
+})
+window.addEventListener('keyup', function (event) {
+  if (event.key == 's') {
+    speedKeys[2] = false
+  }
+})
+window.addEventListener('keyup', function (event) {
+  if (event.key == 'a') {
+    speedKeys[3] = false
+  }
+})
+window.addEventListener('keyup', function (event) {
+  if (event.key == 'd') {
+    speedKeys[4] = false
   }
 })
 //function för att aktivera protectorCircle
@@ -281,8 +339,8 @@ window.addEventListener('keydown', function (event) {
 })
 // function for deciding enemyBall velocity
 function decideBallVel() {
-  ballVelx = -Math.floor(Math.random() * 10) + 5
-  ballVely = Math.floor(Math.random() * 10) + 5
+  ballVelx = -Math.floor(Math.random() * 6) + 1
+  ballVely = Math.floor(Math.random() * 6) + 1
 }
 // function for deciding enemyball starting possition
 function decideBallPos() {
@@ -323,7 +381,8 @@ function protector() {
 }
 // function for creating the enemyBalls
 function createEnemyBall() {
-  if (enemyArray.length < 20) {
+  let enemyAmount = Math.floor(canvas.width / 50)
+  if (enemyArray.length < enemyAmount) {
     let r = Math.floor(Math.random() * 256)
     let g = Math.floor(Math.random() * 256)
     let b = Math.floor(Math.random() * 256)
@@ -337,6 +396,35 @@ function createEnemyBall() {
         'rgb(' + r + ',' + g + ',' + b + ')'
       )
     )
+  }
+}
+//function for moving the player
+function movePlayer() {
+  for (let i = 0; i < moveKeys.length; i++) {
+    if (moveKeys[1]) {
+      playerBall.pos.y -= 2
+    }
+    if (moveKeys[2]) {
+      playerBall.pos.y += 2
+    }
+    if (moveKeys[3]) {
+      playerBall.pos.x -= 2
+    }
+    if (moveKeys[4]) {
+      playerBall.pos.x += 2
+    }
+    if (speedKeys[1]) {
+      playerBall.pos.y -= 2
+    }
+    if (speedKeys[2]) {
+      playerBall.pos.y += 2
+    }
+    if (speedKeys[3]) {
+      playerBall.pos.x -= 2
+    }
+    if (speedKeys[4]) {
+      playerBall.pos.x += 2
+    }
   }
 }
 // when touchProtector was in the same for loop as touch player there was an error
@@ -394,11 +482,28 @@ function createPowerUp() {
     }
   }
 }
+//function to see how long you survived
+function timeKeeper(time) {
+  let endTime = Math.floor(Date.now() / 1000)
+  return endTime - time
+}
+// function to increase the players size by 1px each second
+function playerSize(time) {
+  let endTime = Math.floor(Date.now() / 1000)
+  if (time - (endTime - size)) {
+    size = size + 1
+    return (playerBallSize = playerBallSize + 1)
+  }
+}
 //Funktionen som kör spelet
 function runGame() {
+  start = Date.now()
+
   decideBallVel()
   decideBallPos()
   context.clearRect(0, 0, canvas.width, canvas.height)
+  movePlayer()
+  playerSize(gameStartTime)
   playerBall.draw()
   playerBall.shift()
   protector()
@@ -407,12 +512,13 @@ function runGame() {
   createPowerUp()
 
   if (playerBall.health < 1) {
-    return (lifeCounter.innerHTML = 'You are Dead!')
+    return (lifeCounter.innerHTML =
+      'You Died! You made it ' + timeKeeper(gameStartTime) + ' seconds!')
   }
-  //Sätter hastigheten som spelet kör i
+  end = Date.now()
   setTimeout(() => {
-    return runGame()
-  }, 100)
+    requestAnimationFrame(runGame)
+  }, 33 - (start - end))
 }
 protectorCooldown.innerHTML =
   'Protector Circle is ready, press Space to feel Safe!'
